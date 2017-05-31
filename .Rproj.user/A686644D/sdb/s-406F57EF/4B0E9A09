@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1496241553663.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "4B0E9A09",
+    "lastKnownWriteTime" : 6289381751791895655,
+    "last_content_update" : 1496241553663,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "8426634E",
+        "caption" : "XAUUSD",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=XAUUSD&cache_key=8426634E",
+        "displayedObservations" : "5611",
+        "environment" : "",
+        "object" : "XAUUSD",
+        "preview" : "0",
+        "totalObservations" : "5611",
+        "variables" : "2"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

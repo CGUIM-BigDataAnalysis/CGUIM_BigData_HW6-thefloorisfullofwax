@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1496241553958.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "9891ADD4",
+    "lastKnownWriteTime" : 32370120545140837,
+    "last_content_update" : 1496241553958,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "7963B34",
+        "caption" : "stk2330",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=stk2330&cache_key=7963B34",
+        "displayedObservations" : "5654",
+        "environment" : "",
+        "object" : "stk2330",
+        "preview" : "0",
+        "totalObservations" : "5654",
+        "variables" : "10"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

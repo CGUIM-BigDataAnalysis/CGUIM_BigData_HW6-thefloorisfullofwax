@@ -1,0 +1,11 @@
+"0","#這是R Code Chunk"
+"0","library(readxl)"
+"2","Warning message:
+"
+"2","In strsplit(code, ""\n"", fixed = TRUE) :"
+"2","
+ "
+"2"," input string 1 is invalid in this locale
+"
+"0","stk2330 <- read_excel(""C:/Users/chang/Desktop/try_stock.xlsx"")"
+"0","XAUUSD <- read_excel(""C:/Users/chang/Desktop/stock_2330.xlsx"")"

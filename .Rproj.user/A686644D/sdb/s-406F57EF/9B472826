@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"個股股價 券商 金價關聯性\"\noutput: github_document\n---\n\n呂黃嘉，林衍丞\n\n## 分析議題背景\n背景介紹背景介紹\n#身為半個客家人，研究一下股票也是理所當然的\n\n\n## 分析動機\n分析動機分析動機\n#之前有抓了股票的DATA，想要用R練習視覺化並且做出相關聯的決策\n\n\n## 使用資料\n說明使用資料們\n\n載入使用資料們\n```{r}\n#這是R Code Chunk\nlibrary(readxl)\nstk2330 <- read_excel(\"C:/Users/chang/Desktop/try_stock.xlsx\")\nXAUUSD <- read_excel(\"C:/Users/chang/Desktop/stock_2330.xlsx\")\n\n\n```\n\n## 資料處理與清洗\n說明處理資料的步驟\n\n處理資料\n```{r}\n#這是R Code Chunk\n#其實這個資料我在抓的時候就已經處理過了\n#這邊轉型一下DATE就好\ncolnames(XAUUSD)[1] <- \"date\"\ncolnames(stk2330)[2] <- \"date\"\n\nXAUUSD$date = strptime(as.character(XAUUSD$date), \"%d-%m-%Y\")\nXAUUSD$date = format(XAUUSD$date, \"%Y-%m-%d\")\n\n```\n\n## 探索式資料分析\n圖文並茂圖文並茂\n```{r}\n#這是R Code Chunk\nView(XAUUSD)\nView(stk2330)\n#這個改天在解釋吧\n#先秀出來 之後會有更多資料比較好解釋\n```\n\n## 期末專題分析規劃\n期末專題要做XXOOO交叉分析\n#期末專題應該可以做出股價與其他指數的關聯性  相關係數分析等等......\n#利用R畫出 K線圖 跟其他指數做比較\n\n\n\n",
+    "created" : 1496239274493.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "152909744",
+    "id" : "9B472826",
+    "lastKnownWriteTime" : 1496241765,
+    "last_content_update" : 1496241765281,
+    "path" : "~/GitHub/CGUIM_BigData_HW6-thefloorisfullofwax/README.Rmd",
+    "project_path" : "README.Rmd",
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
