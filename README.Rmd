@@ -1,9 +1,14 @@
 ---
-title: "個股股價 券商 金價關聯性"
+title: "在股市上 黃金交叉&死亡交叉 是否真的值得參考"
 output: github_document
 ---
+#組員
+呂黃嘉(畫圖，回測)，林衍丞(匯入資料，清洗資料，PPT)
 
-呂黃嘉，林衍丞
+##題目
+在股市上”黃金交叉&死亡交叉”是否真的值得參考
+對 ”台股較大較穩定的1735支股票” 進行回測看看是否有獲利
+
 
 ## 分析議題背景
 背景介紹背景介紹
@@ -12,18 +17,25 @@ output: github_document
 
 ## 分析動機
 分析動機分析動機
-#之前有抓了股票的DATA，想要用R練習視覺化並且做出相關聯的決策
+#在張錦特老師LAB工讀的時候有抓了股票的DATA，想要用R練習視覺化並且做出相關聯的決策
 
 
 ## 使用資料
 說明使用資料們
+從以下兩個網站爬來的
+證券櫃檯買賣中心http://www.tpex.org.tw/web/stock/aftertrading/daily_trading_info/st43.php?l=zh-tw (上櫃)
+臺灣證券交易所http://www.twse.com.tw/zh/page/trading/exchange/STOCK_DAY.html (上市)
 
 載入使用資料們
 ```{r}
 #這是R Code Chunk
-library(readxl)
-stk2330 <- read_excel("C:/Users/chang/Desktop/try_stock.xlsx")
-XAUUSD <- read_excel("C:/Users/chang/Desktop/stock_2330.xlsx")
+library(readr)
+library(dplyr)
+library(quantmod)
+#import data
+#格式是CSV
+OHLC <- read_csv("C:/Users/chang/Desktop/TEMP/OHLC.csv")
+three_legals <- read_csv("C:/Users/chang/Desktop/TEMP/三大法人.csv")
 
 
 ```
@@ -34,30 +46,230 @@ XAUUSD <- read_excel("C:/Users/chang/Desktop/stock_2330.xlsx")
 處理資料
 ```{r}
 #這是R Code Chunk
-#其實這個資料我在抓的時候就已經處理過了
-#這邊轉型一下DATE就好
-colnames(XAUUSD)[1] <- "date"
-colnames(stk2330)[2] <- "date"
 
-XAUUSD$date = strptime(as.character(XAUUSD$date), "%d-%m-%Y")
-XAUUSD$date = format(XAUUSD$date, "%Y-%m-%d")
+#clean
+OHLC = OHLC[,c(-4,-10)]
+#join
+joined_frame = inner_join(OHLC,three_legals,by=c("stkno","Date"))
+#遺漏值處理 NA to 0
+joined_frame[is.na(joined_frame)] <- 0
+joined_frame$Date = as.Date(joined_frame$Date, format= "%Y-%d-%m")
 
 ```
 
 ## 探索式資料分析
-圖文並茂圖文並茂
-```{r}
-#這是R Code Chunk
-View(XAUUSD)
-View(stk2330)
-#這個改天在解釋吧
-#先秀出來 之後會有更多資料比較好解釋
-```
+#先取單股0050進行分析之後會秀出反例單股1102
+#最後對全部資料進行回測計算有沒有獲利
 
-## 期末專題分析規劃
-期末專題要做XXOOO交叉分析
-#期末專題應該可以做出股價與其他指數的關聯性  相關係數分析等等......
-#利用R畫出 K線圖 跟其他指數做比較
+#計算黃金&死亡交叉
+#取單股 (0050)
+stkno_0050 = OHLC[grep("0050", OHLC$stkno),]
+#為建立 XTS物件做的處理
+stkno_0050 = stkno_0050[,c(-1,-8)]
+colnames(stkno_0050) <- c("Date","Volume","Open","High","Low","Close")
+stkno_0050 = stkno_0050[,c("Date","Open","High","Low","Close","Volume")]
+stkno_0050 = stkno_0050[complete.cases(stkno_0050),]
+#建立XTS物件
+stk0050 = xts(stkno_0050[, -1], order.by=as.POSIXct(stkno_0050$Date))
+
+
+#1 K線圖，量，MA10，MA20    simple sample
+chartSeries(stk0050,subset="last 6 months",theme="white", up.col='red', dn.col='green')
+#addSMA(10,col="blue")
+#addSMA(20,col="red")
+MA10<-runMean(stk0050[,4],n=10)
+MA20<-runMean(stk0050[,4],n=20)
+addTA(MA10,on=1,col="blue")
+addTA(MA20,on=1,col="red")
+
+
+#2.0 去除量的圖 加上回測資產圖  中程(MA20 vs MA60)
+chartSeries(stk0050['2004-06-30/2017-06-16'],theme="white", up.col='red', dn.col='green',TA=NULL)
+MA20<-runMean(stk0050[,4],n=20)
+MA60<-runMean(stk0050[,4],n=60)
+addTA(MA20,on=1,col="blue")
+addTA(MA60,on=1,col="red")
+position<-Lag(ifelse(MA20>=MA60, 1,0))
+return<-ROC(Cl(stk0050))*position
+return <- return['2004-06-30/2017-06-16']
+eq <- exp(cumsum(return))
+addTA(eq)
+
+
+#2.1 去除量的圖 加上回測資產圖  中程 ZOOM IN 資產下降的部分 (2012-10~2013-12)
+zoomChart('2012-10::2013-12') 
+addTA(MA20-MA60)
+
+
+#2.2 去除量的圖 加上回測資產圖  近程(MA5 vs MA20)
+chartSeries(stk0050['2004-06-30/2013-12-31'],theme="white", up.col='red', dn.col='green',TA=NULL)
+MA5<-runMean(stk0050[,4],n=5)
+MA20<-runMean(stk0050[,4],n=20)
+addTA(MA5,on=1,col="blue")
+addTA(MA20,on=1,col="red")
+position<-Lag(ifelse(MA5>=MA20, 1,0))
+return<-ROC(Cl(stk0050))*position
+return <- return['2004-06-30/2013-12-31']
+eq <- exp(cumsum(return))
+addTA(eq)
+zoomChart('2012-10::2013-12') 
+addTA(MA5-MA20)
+
+
+#3.0 反例 反例，資產下降
+#取單股 (1102) 
+stkno_1102 = OHLC[grep("1102", OHLC$stkno),]
+#為建立 XTS物件做的處理
+stkno_1102 = stkno_1102[,c(-1,-8)]
+colnames(stkno_1102) <- c("Date","Volume","Open","High","Low","Close")
+stkno_1102 = stkno_1102[,c("Date","Open","High","Low","Close","Volume")]
+stkno_1102 = stkno_1102[complete.cases(stkno_1102),]
+#建立XTS物件
+stk1102 = xts(stkno_1102[, -1], order.by=as.POSIXct(stkno_1102$Date))
+
+# 1102 圖表
+chartSeries(stk1102['2004-06-30/2017-06-16'],theme="white", up.col='red', dn.col='green',TA=NULL)
+MA20<-runMean(stk1102[,4],n=20)
+MA60<-runMean(stk1102[,4],n=60)
+addTA(MA20,on=1,col="blue")
+addTA(MA60,on=1,col="red")
+position<-Lag(ifelse(MA20>=MA60, 1,0))
+return<-ROC(Cl(stk1102))*position
+return <- return['2004-06-30/2017-06-16']
+eq <- exp(cumsum(return))
+addTA(eq)
+
+
+#4.0 對1735ㄓ支股票回測
+#get all stkno
+stkno_all = unique(joined_frame$stkno)
+
+geteq_all <- function(x){
+  #計算黃金&死亡交叉
+  #取單股 (x)
+  stkno_ = OHLC[grep(x, OHLC$stkno),]
+  #為建立 XTS物件做的處理
+  stkno_ = stkno_[,c(-1,-8)]
+  colnames(stkno_) <- c("Date","Volume","Open","High","Low","Close")
+  stkno_ = stkno_[,c("Date","Open","High","Low","Close","Volume")]
+  stkno_ = stkno_[complete.cases(stkno_),]
+  #建立XTS物件
+  stk = xts(stkno_[, -1], order.by=as.POSIXct(stkno_$Date))
+  fastMA<-runMean(stk[,4],n=20)
+  slowMA<-runMean(stk[,4],n=60)
+  position<-Lag(ifelse(fastMA>=slowMA, 1,0))
+  return<-ROC(Cl(stk))*position
+  coredata(return)[!is.finite(return)] <- NA
+  return = return[complete.cases(return),]
+  eq <- exp(cumsum(return))
+  last_eq = eq[length(eq)]
+  df_last_eq = data.frame(last_eq, row.names=NULL)
+  last_value = df_last_eq[1,]
+  return(last_value)
+}
+
+geteq_3y <- function(x){
+  #計算黃金&死亡交叉
+  #取單股 (x)
+  stkno_ = OHLC[grep(x, OHLC$stkno),]
+  #為建立 XTS物件做的處理
+  stkno_ = stkno_[,c(-1,-8)]
+  colnames(stkno_) <- c("Date","Volume","Open","High","Low","Close")
+  stkno_ = stkno_[,c("Date","Open","High","Low","Close","Volume")]
+  stkno_ = stkno_[complete.cases(stkno_),]
+  #建立XTS物件
+  stk = xts(stkno_[, -1], order.by=as.POSIXct(stkno_$Date))
+  fastMA<-runMean(stk[,4],n=20)
+  slowMA<-runMean(stk[,4],n=60)
+  position<-Lag(ifelse(fastMA>=slowMA, 1,0))
+  return<-ROC(Cl(stk))*position
+  coredata(return)[!is.finite(return)] <- NA
+  return = return[complete.cases(return),]
+  return = last(return, "3 years")#三年
+  eq <- exp(cumsum(return))
+  last_eq = eq[length(eq)]
+  df_last_eq = data.frame(last_eq, row.names=NULL)
+  last_value = df_last_eq[1,]
+  return(last_value)
+}
+
+#取近所有資料進行回測
+indexx <- 0
+list <- list()
+list_stkno <- list()
+P_count_all = 0
+N_count_all = 0
+
+for (i in stkno_all) { 
+  tryCatch({
+    eq = geteq_all(i)
+    indexx <- indexx + 1
+    list_stkno[[indexx]] = i
+    list[[indexx]] <- eq
+    
+    if (eq  > 1) {
+      P_count_all = P_count_all + 1
+    } else {
+      N_count_all = N_count_all + 1
+    } 
+    print(eq)
+  }, error=function(e){print(e)})
+}
+
+print(P_count_all)
+print(N_count_all)
+P_count_all / (N_count_all + P_count_all)
+
+DF = data.frame(stkno=character(),
+                eq=double(),
+                stringsAsFactors=FALSE)
+
+DF = do.call(rbind, Map(data.frame, stkno=list_stkno, eq=list))
+mean_eq_all = mean(DF$eq)
+#總資產回報
+mean(DF$eq)
+#最大個股成長
+max(DF$eq)
+
+#取近三年資料進行回測
+indexx <- 0
+list <- list()
+list_stkno <- list()
+P_count_3years = 0
+N_count_3years = 0
+
+for (i in stkno_all) { 
+  tryCatch({
+    eq = geteq_3y(i)
+    indexx <- indexx + 1
+    list_stkno[[indexx]] = i
+    list[[indexx]] <- eq
+    
+    if (eq  > 1) {
+      P_count_3years = P_count_3years + 1
+    } else {
+      N_count_3years = N_count_3years + 1
+    } 
+    print(eq)
+  }, error=function(e){print(e)})
+}
+
+print(P_count_3years)
+print(N_count_3years)
+P_count_3years /( P_count_3years + N_count_3years)
+DF_3y = data.frame(stkno=character(),
+                   eq=double(),
+                   stringsAsFactors=FALSE)
+
+DF_3y = do.call(rbind, Map(data.frame, stkno=list_stkno, eq=list))
+mean_eq_3years = mean(DF_3y$eq)
+#總資產回報
+mean(DF_3y$eq)
+#最大個股成長
+max(DF_3y$eq)
+
+
+
 
 
 

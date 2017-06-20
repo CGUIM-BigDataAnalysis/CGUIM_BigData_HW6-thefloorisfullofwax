@@ -1,0 +1,15 @@
+"0","#clean
+OHLC = OHLC[,c(-4,-10)]
+"
+"2","Warning message:
+"
+"2","In strsplit(code, ""\n"", fixed = TRUE) :"
+"2","
+ "
+"2"," input string 1 is invalid in this locale
+"
+"0","#join"
+"0","joined_frame = inner_join(OHLC,three_legals,by=c(""stkno"",""Date""))"
+"0","#遺漏值處理 NA to 0"
+"0","joined_frame[is.na(joined_frame)] <- 0"
+"0","joined_frame$Date = as.Date(joined_frame$Date, format= ""%Y-%d-%m"")"
